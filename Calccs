@@ -1,0 +1,109 @@
+//Calculator
+
+//Server
+package newone;
+
+import java.io.IOException;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
+public class trigoServer {
+ private static final int PORT = 9876;
+ private static final int BUFFER_SIZE = 1024;
+ public static void main(String[] args) {
+ System.out.println("Starting UDP Trigonometry Server on port " + PORT + "...");
+ try (DatagramSocket serverSocket = new DatagramSocket(PORT)) {
+ byte[] receiveBuffer = new byte[BUFFER_SIZE];
+ while (true) {
+ DatagramPacket receivePacket = new DatagramPacket(receiveBuffer,
+receiveBuffer.length);
+ serverSocket.receive(receivePacket);
+ String request = new String(receivePacket.getData(), 0, receivePacket.getLength(),
+StandardCharsets.UTF_8).trim();
+ InetAddress clientAddress = receivePacket.getAddress();
+ int clientPort = receivePacket.getPort();
+ String result = "Invalid input.";
+ String[] parts = request.split(" ");
+ if (parts.length == 2) {
+ try {
+ String function = parts[0].toLowerCase();
+ double value = Double.parseDouble(parts[1]);
+ double calculatedValue = 0.0;
+ switch (function) {
+ case "sin":
+ calculatedValue = Math.sin(Math.toRadians(value));
+ result = String.format("sin(%s) = %.4f", value, calculatedValue);
+ break;
+ case "cos":
+ calculatedValue = Math.cos(Math.toRadians(value));
+ result = String.format("cos(%s) = %.4f", value, calculatedValue);
+ break;
+ case "tan":
+ // Check for values where tangent is undefined.
+ if (value % 180 == 90) {
+ result = "tan(" + value + ") is undefined";
+ } else {
+ calculatedValue = Math.tan(Math.toRadians(value));
+ result = String.format("tan(%s) = %.4f", value, calculatedValue);
+ }
+ break;
+ }
+ } catch (NumberFormatException e) {
+ result = "Invalid number format. Please provide a numeric value.";
+ }
+ }
+ byte[] sendBuffer = result.getBytes(StandardCharsets.UTF_8);
+ DatagramPacket sendPacket = new DatagramPacket(sendBuffer, sendBuffer.length,
+clientAddress, clientPort);
+ serverSocket.send(sendPacket);
+ System.out.println("Sent response: " + result);
+ }
+ } catch (SocketException e) {
+ System.err.println("Socket error: " + e.getMessage());
+ } catch (IOException e) {
+	 System.err.println("I/O error: " + e.getMessage());
+	 }
+	 }
+	} 
+
+//Client
+package newone;
+
+import java.io.IOException;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
+public class trigonometryClient {
+ private static final String shost = "localhost";
+ private static final int sport = 9876;
+ private static final int buffersize = 1024;
+ public static void main(String[] args) {
+ System.out.println("UDP Client started.");
+ System.out.println("Enter choice 'sin 90', 'cos 45', or 'bye' to exit.");
+ try (DatagramSocket clientSocket = new DatagramSocket();
+ Scanner scanner = new Scanner(System.in)) {
+ InetAddress serverAddress = InetAddress.getByName(shost);
+ byte[] receiveBuffer = new byte[buffersize];
+ while (true) {
+ System.out.print("Enter command: ");
+ String command = scanner.nextLine();
+ if ("bye".equalsIgnoreCase(command)) {
+ System.out.println("Exiting client.");
+ break;
+ }
+ byte[] sendBuffer = command.getBytes(StandardCharsets.UTF_8);
+ DatagramPacket sendPacket = new DatagramPacket(sendBuffer, sendBuffer.length,
+serverAddress, sport);
+ clientSocket.send(sendPacket);
+ DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+ clientSocket.receive(receivePacket);
+ String serverReply = new String(receivePacket.getData(), 0,
+receivePacket.getLength(), StandardCharsets.UTF_8);
+ System.out.println("Server response: " + serverReply);
+ }
+ } catch (SocketException e) {
+ System.err.println("Socket error: " + e.getMessage());
+ } catch (IOException e) {
+ System.err.println("I/O error: " + e.getMessage());
+ }
+ }
+}
