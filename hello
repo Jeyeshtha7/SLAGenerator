@@ -1,0 +1,48 @@
+// server
+
+package newone;
+
+import java.net.*;
+import java.io.*;
+public class Server_Side {
+ public static void main(String[] args) throws UnknownHostException, IOException {
+ ServerSocket ss = new ServerSocket(9001);
+ Socket s = ss.accept();
+ BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+ DataInputStream din = new DataInputStream(s.getInputStream());
+ DataOutputStream dout = new DataOutputStream(s.getOutputStream());
+ String str1="";
+ while(!str1.equals("bye"))
+ {
+ str1 = din.readUTF();
+ System.out.println("Client Says:"+str1);
+ str1= br.readLine();
+ dout.writeUTF(str1);
+ }
+ ss.close();
+ }
+}
+
+// client
+
+package newone;
+
+import java.net.*;
+import java.io.*;
+public class Client_Side {
+ public static void main(String[] args) throws UnknownHostException, IOException {
+ Socket sc = new Socket("localhost",9001);
+ BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+ DataInputStream din = new DataInputStream(sc.getInputStream());
+ DataOutputStream dout = new DataOutputStream(sc.getOutputStream());
+ String str1="";
+ while(!str1.equals("bye"))
+ {
+ str1 = br.readLine();
+ dout.writeUTF(str1);
+ str1=din.readUTF();
+ System.out.println("Server Says:"+str1);
+ }
+ sc.close();
+ }
+}
