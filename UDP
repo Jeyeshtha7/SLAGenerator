@@ -1,0 +1,80 @@
+//server 
+
+package newone;
+
+import java.net.*;
+import java.io.*;
+
+public class UDPserver {
+ public static void main(String[] args) throws Exception {
+ DatagramSocket socket = new DatagramSocket(9001);
+ BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+ byte[] receiveBuffer = new byte[1024];
+ byte[] sendBuffer;
+ System.out.println("UDP Server started. Waiting for client...");
+ while (true) {
+ DatagramPacket receivePacket = new DatagramPacket(receiveBuffer,
+receiveBuffer.length);
+ socket.receive(receivePacket);
+ String clientMsg = new String(receivePacket.getData(), 0, receivePacket.getLength());
+ System.out.println("Client says: " + clientMsg);
+ if (clientMsg.equalsIgnoreCase("bye")) {
+ System.out.println("Client ended the chat.");
+ break;
+ }
+ System.out.print("Enter message for client: ");
+ String serverMsg = br.readLine();
+ sendBuffer = serverMsg.getBytes();
+ InetAddress clientAddress = receivePacket.getAddress();
+ int clientPort = receivePacket.getPort();
+ DatagramPacket sendPacket = new DatagramPacket(sendBuffer, sendBuffer.length,
+clientAddress, clientPort);
+ socket.send(sendPacket);
+ if (serverMsg.equalsIgnoreCase("bye")) {
+ System.out.println("Server ended the chat.");
+ break;
+ }
+ }
+ socket.close();
+ }
+}
+
+//client
+
+package newone;
+
+import java.net.*;
+import java.io.*; 
+
+public class UDPclient {
+	 public static void main(String[] args) throws Exception {
+	 DatagramSocket socket = new DatagramSocket();
+	 BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+	 byte[] sendBuffer;
+	 byte[] receiveBuffer = new byte[1024];
+	 InetAddress serverAddress = InetAddress.getByName("localhost");
+	 int serverPort = 9001;
+	 while (true) {
+	 System.out.print("Enter message for server: ");
+	 String clientMsg = br.readLine();
+	 sendBuffer = clientMsg.getBytes();
+	 DatagramPacket sendPacket = new DatagramPacket(sendBuffer, sendBuffer.length,
+	serverAddress, serverPort);
+	 socket.send(sendPacket);
+	 if (clientMsg.equalsIgnoreCase("bye")) {
+	 System.out.println("Client ended the chat.");
+	 break;
+	 }
+	 DatagramPacket receivePacket = new DatagramPacket(receiveBuffer,
+	receiveBuffer.length);
+	 socket.receive(receivePacket);
+	 String serverMsg = new String(receivePacket.getData(), 0, receivePacket.getLength());
+	 System.out.println("Server says: " + serverMsg);
+	 if (serverMsg.equalsIgnoreCase("bye")) {
+	 System.out.println("Server ended the chat.");
+	 break;
+	 }
+	 }
+	 socket.close();
+	 }
+	}
