@@ -1,0 +1,85 @@
+//File
+
+//server
+
+package newone;
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+public class serverfile {
+
+	private static DataInputStream dataInputStream = null;
+	 public static void main(String[] args) {
+	 int port = 9006;
+	 String saveDir = "C:\\Users\\jeyeshtha\\Desktop";
+	 try (ServerSocket serverSocket = new ServerSocket(port)) {
+	 System.out.println("Server is starting on port " + port + "...");
+	 Socket clientSocket = serverSocket.accept();
+	 System.out.println("Client connected!");
+	 dataInputStream = new DataInputStream(clientSocket.getInputStream());
+	 receiveFile(saveDir);
+	 dataInputStream.close();
+	 clientSocket.close();
+	 System.out.println("Server closed.");
+	 } catch (Exception e) {
+	 e.printStackTrace();
+	 }
+	 }
+	 private static void receiveFile(String saveDir) throws IOException {
+	 long fileSize = dataInputStream.readLong();
+	 String fileName = dataInputStream.readUTF();
+	 File outFile = new File(saveDir, fileName);
+	 try (FileOutputStream fos = new FileOutputStream(outFile)) {
+	 byte[] buffer = new byte[4 * 1024];
+	 long totalRead = 0;
+	 int bytesRead;
+	 while ((bytesRead = dataInputStream.read(buffer)) != -1) {
+	 fos.write(buffer, 0, bytesRead);
+	 totalRead += bytesRead;
+	 if (totalRead >= fileSize) break;
+	 }
+	 }
+	 System.out.println("File received successfully: " + outFile.getAbsolutePath());
+	 } 
+}
+
+
+//client
+
+package newone;
+import java.io.*;
+import java.net.Socket;
+public class clientfile {
+ private static DataOutputStream dataOutputStream = null;
+ public static void main(String[] args) {
+ String filePath = "sample.txt";
+ String serverIP = "localhost";
+ int port = 9006;
+ try (Socket socket = new Socket(serverIP, port)) {
+ System.out.println("Connected to server!");
+ dataOutputStream = new DataOutputStream(socket.getOutputStream());
+ sendFile(filePath);
+ dataOutputStream.close();
+ System.out.println("File sent successfully.");
+ } catch (Exception e) {
+ e.printStackTrace();
+ }
+ }
+ private static void sendFile(String path) throws IOException {
+ File file = new File(path);
+ if (!file.exists()) {
+ System.out.println("File not found: " + path);
+ return;
+ }
+ FileInputStream fileInputStream = new FileInputStream(file);
+ dataOutputStream.writeLong(file.length());
+ dataOutputStream.writeUTF(file.getName());
+ byte[] buffer = new byte[4 * 1024];
+ int bytesRead;
+ while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+ dataOutputStream.write(buffer, 0, bytesRead);
+ }
+ dataOutputStream.flush();
+ fileInputStream.close();
+ }
+}
